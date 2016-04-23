@@ -8,6 +8,7 @@ import multiprocessing
 import Tkinter
 import tfx
 import IPython
+import fitplane
 
 
 def initialize():
@@ -25,8 +26,14 @@ def initialize():
     time.sleep(2)
     return
 
+def calibrate():
+    pts = fitplane.load_points()
+    plane = fitplane.least_squares_plane_normal(pts)
+    return plane
+
 def get_frame(pos):
-    return tfx.pose(pos[0:3], pos[3:7])
+    pt = fitplane.project_onto_plane(pos[0:3])
+    return tfx.pose(pt.tolist(), pos[3:7])
 
 def cut():
     psm1.open_gripper(-30)
@@ -52,49 +59,8 @@ def grab_gauze():
     pos[2] = pos[2] + 0.01
     psm2.move_cartesian_frame(get_frame(pos))
 
-def calibration():
-    pts = []
-    sub = None
-    prs = None
-    def startCallback():
-        global sub, prs
-        prs = multiprocessing.Process(target = start_listening)
-        prs.start()
-        return
-    def start_listening():
-        global sub
-        rospy.init_node('listener', anonymous=True)
-        sub = rospy.Subscriber('/dvrk/PSM1/position_cartesian_current', Pose, callback_PSM1_actual)
-        rospy.spin()
-
-    def callback_PSM1_actual(data):
-        global sub
-        pos = data.position
-        pts.append(pos)
-        # print pos
-        print sub
-        sub.unregister()
-
-    def exitCallback():
-        global prs
-        top.destroy()
-        prs.terminate()
-        return
-
-    top = Tkinter.Tk()
-    top.title('Listener')
-    top.geometry('400x200')
-
-    B = Tkinter.Button(top, text="Record", command = startCallback)
-    D = Tkinter.Button(top, text="Exit", command = exitCallback)
-
-    B.pack()
-    D.pack()
-    top.mainloop()
-    print pts
-
 if __name__ == '__main__':
-    calibration()
+    plane = calibrate()
 
     psm1_position = None
     psm2_position = None
