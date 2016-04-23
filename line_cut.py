@@ -32,14 +32,14 @@ def cut():
     psm1.open_gripper(-30)
     time.sleep(2.5)
     pos = psm1_position
-    pos[0] = pos[0] - 0.0005
+    pos[0] = pos[0] - 0.001
+    psm1.move_cartesian_frame(get_frame(pos))
     psm1.open_gripper(80)
     time.sleep(2.35)
-    psm1.move_cartesian_frame(get_frame(pos))
 
 def move_to_next():
     pos = psm1_position
-    pos[0] = pos[0] + 0.005
+    pos[0] = pos[0] + 0.01
     pos[2] = pos[2] - 0.0004
     psm1.move_cartesian_frame(get_frame(pos))
 
@@ -52,8 +52,50 @@ def grab_gauze():
     pos[2] = pos[2] + 0.01
     psm2.move_cartesian_frame(get_frame(pos))
 
+def calibration():
+    pts = []
+    sub = None
+    prs = None
+    def startCallback():
+        global sub, prs
+        prs = multiprocessing.Process(target = start_listening)
+        prs.start()
+        return
+    def start_listening():
+        global sub
+        rospy.init_node('listener', anonymous=True)
+        sub = rospy.Subscriber('/dvrk/PSM1/position_cartesian_current', Pose, callback_PSM1_actual)
+        rospy.spin()
+
+    def callback_PSM1_actual(data):
+        global sub
+        pos = data.position
+        pts.append(pos)
+        # print pos
+        print sub
+        sub.unregister()
+
+    def exitCallback():
+        global prs
+        top.destroy()
+        prs.terminate()
+        return
+
+    top = Tkinter.Tk()
+    top.title('Listener')
+    top.geometry('400x200')
+
+    B = Tkinter.Button(top, text="Record", command = startCallback)
+    D = Tkinter.Button(top, text="Exit", command = exitCallback)
+
+    B.pack()
+    D.pack()
+    top.mainloop()
+    print pts
 
 if __name__ == '__main__':
+    calibration()
+
     psm1_position = None
     psm2_position = None
 
