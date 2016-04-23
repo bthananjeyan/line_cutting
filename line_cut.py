@@ -30,6 +30,7 @@ def calibrate():
 
 def get_frame(pos):
     pt = fitplane.project_onto_plane(plane, pos[0:3])
+    pt[0, 2] += 0.001
     return tfx.pose(pt.tolist(), pos[3:7])
 
 
