@@ -38,7 +38,7 @@ def get_frame2(pos):
     return tfx.pose(pos[0:3], pos[3:7])
 
 def cut():
-    psm1.open_gripper(-30)
+    psm1.open_gripper(10)
     time.sleep(2.5)
     psm1.open_gripper(80)
     time.sleep(2.35)

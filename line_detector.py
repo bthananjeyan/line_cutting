@@ -76,7 +76,6 @@ class LineDetector:
 
     def process_image(self):
         print True
-        return
         self.left_image = self.right_image
 
         hsv = cv2.cvtColor(self.left_image, cv2.COLOR_BGR2HSV)
@@ -137,5 +136,5 @@ class LineDetector:
 
 
 if __name__ == "__main__":
-    a = LineDetector(USE_SAVED_IMAGES=False)
+    a = LineDetector(USE_SAVED_IMAGES=True)
     a.process_image()
